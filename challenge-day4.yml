@@ -1,0 +1,25 @@
+- name: copy keys into remote hosts
+  hosts: planetexpress
+
+  vars_prompt:
+    - name: ansible_ssh_pass
+      private: yes
+
+  tasks:
+  - name: Set authorized key taken from file
+    become: yes
+    authorized_key:
+      user: "{{ ansible_user }}" # name of the user we SSH into the system as
+      state: present
+      key: "{{ lookup('file', '~/.ssh/id_rsa.pub') }}" # public key on the controller
+    when: ansible_distribution == "Ubuntu"
+
+  - name: create astronomy directory
+    file:
+      path: "/home/{{ ansible_user }}/astronomy/"
+      state: directory
+
+  - name: get APOD
+    get_url:
+      url: https://www.nasa.gov/sites/default/files/thumbnails/image/apod.jpg
+      dest: "/home/{{ ansible_user }}/astronomy/"
